@@ -1,5 +1,7 @@
+import asyncpg
 import httpx
 from bs4 import BeautifulSoup
+from db_manager import save_vacancies
 
 
 async def fetch_html(client: httpx.AsyncClient, url: str) -> str:
@@ -48,11 +50,15 @@ async def main():
         )
     }
     url = "https://career.habr.com/vacancies/programmist_python"
+    dsn = "postgres://postgres:postgres@127.0.0.1:5432/job_radar"
 
-    async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
-        html_content = await fetch_html(client, url)
-        vacancies = parse_vacancies(html_content)
-        print(vacancies)
+    async with asyncpg.create_pool(dsn) as pool:
+        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
+            html_content = await fetch_html(client, url)
+            vacancies = parse_vacancies(html_content)
+            await save_vacancies(pool, vacancies)
+
+            print("[СИСТЕМА] Все вакансии успешно сохранены в PostgreSQL!")
 
 
 if __name__ == "__main__":
