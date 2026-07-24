@@ -1,7 +1,12 @@
 import asyncpg
 import httpx
+import os
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from bs4 import BeautifulSoup
-from db_manager import save_vacancies
+from dotenv import load_dotenv
+from .db_manager import save_vacancies
+
+load_dotenv()
 
 
 async def fetch_html(client: httpx.AsyncClient, url: str) -> str:
@@ -41,24 +46,36 @@ def parse_vacancies(html_content: str) -> list[dict]:
     return vacancies_data
 
 
-async def main():
+async def run_parser_job(pool: asyncpg.Pool):
     headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/120.0.0.0 Safari/537.36"
-        )
-    }
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            )
+        }
     url = "https://career.habr.com/vacancies/programmist_python"
-    dsn = "postgres://postgres:postgres@127.0.0.1:5432/job_radar"
+
+    async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
+        html_content = await fetch_html(client, url)
+        vacancies = parse_vacancies(html_content)
+        await save_vacancies(pool, vacancies)
+
+        print("[SYSTEM] All vacancies saved in PostgreSQL successfully!")
+
+
+async def main():
+    dsn = os.environ['DATABASE_URL']
 
     async with asyncpg.create_pool(dsn) as pool:
-        async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
-            html_content = await fetch_html(client, url)
-            vacancies = parse_vacancies(html_content)
-            await save_vacancies(pool, vacancies)
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(run_parser_job, "interval", seconds=30, args=[pool])
+        scheduler.start()
 
-            print("[СИСТЕМА] Все вакансии успешно сохранены в PostgreSQL!")
+        print("[SYSTEM] Scheduler started")
+
+        while True:
+            await asyncio.sleep(1)
 
 
 if __name__ == "__main__":
