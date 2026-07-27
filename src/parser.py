@@ -1,9 +1,11 @@
+import os
+
 import asyncpg
 import httpx
-import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+
 from .db_manager import save_vacancies
 
 load_dotenv()
@@ -33,9 +35,7 @@ def parse_vacancies(html_content: str) -> list[dict]:
         company_el = company_div.find("a") if company_div else None
 
         title = title_el.text.strip() if title_el else "No title"
-        company_name = (
-            company_el.text.strip() if company_el else "No company name"
-        )
+        company_name = company_el.text.strip() if company_el else "No company name"
 
         vacancy_data = {
             "title": title,
@@ -48,12 +48,12 @@ def parse_vacancies(html_content: str) -> list[dict]:
 
 async def run_parser_job(pool: asyncpg.Pool):
     headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/120.0.0.0 Safari/537.36"
-            )
-        }
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/120.0.0.0 Safari/537.36"
+        )
+    }
     url = "https://career.habr.com/vacancies/programmist_python"
 
     async with httpx.AsyncClient(timeout=10.0, headers=headers) as client:
@@ -65,7 +65,7 @@ async def run_parser_job(pool: asyncpg.Pool):
 
 
 async def main():
-    dsn = os.environ['DATABASE_URL']
+    dsn = os.environ["DATABASE_URL"]
 
     async with asyncpg.create_pool(dsn) as pool:
         scheduler = AsyncIOScheduler()
@@ -80,4 +80,5 @@ async def main():
 
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())

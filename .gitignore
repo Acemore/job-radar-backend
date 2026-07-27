@@ -2,3 +2,4 @@
 __pycache__/
 *.pyc
 .env
+context_snapshot.md
