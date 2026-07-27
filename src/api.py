@@ -1,9 +1,12 @@
 import os
-import asyncpg
 from contextlib import asynccontextmanager
+
+import asyncpg
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
+
 from .db_manager import get_vacancies
+from .schemas import VacancyResponse
 
 load_dotenv()
 
@@ -25,13 +28,13 @@ async def health_check() -> dict:
     return {"status": "OK"}
 
 
-@app.get("/api/vacancies")
-async def get_all_vacancies(request: Request) -> list[dict]:
+@app.get("/api/vacancies", response_model=list[VacancyResponse])
+async def get_all_vacancies(request: Request) -> list[VacancyResponse]:
     pool = request.app.state.pool
 
-    vacancies = await get_vacancies(pool)
+    raw_vacancies = await get_vacancies(pool)
 
-    return vacancies
+    return [VacancyResponse(**vacancy) for vacancy in raw_vacancies]
 
 
 if __name__ == "__main__":

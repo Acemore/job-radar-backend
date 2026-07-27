@@ -15,3 +15,12 @@ dependencies = [
     "requests>=2.34.2",
     "uvicorn>=0.51.0",
 ]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.6.1",
+    "ruff>=0.16.0",
+]
