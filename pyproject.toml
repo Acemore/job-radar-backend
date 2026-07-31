@@ -1,9 +1,13 @@
 [project]
 name = "job-radar-backend"
 version = "0.1.0"
-description = "Add your description here"
+description = "Automated ETL platform matching candidate skills with the job market"
 readme = "README.md"
 requires-python = ">=3.14"
+authors = [
+    { name = "Acemore", email = "91070379+Acemore@users.noreply.github.com" }
+]
+license = { text = "MIT" }
 dependencies = [
     "apscheduler>=3.11.3",
     "asyncpg>=0.31.0",
@@ -16,12 +20,17 @@ dependencies = [
     "uvicorn>=0.51.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Acemore"
+Repository = "https://github.com/Acemore/job-radar-backend"
+
 [tool.ruff.lint]
 select = ["E", "F", "I"]
 
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.1",
+    "psycopg2-binary>=2.9.12",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.0",
