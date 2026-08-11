@@ -1,0 +1,59 @@
+{
+  "data": {
+    "repository": {
+      "discussions": {
+        "nodes": [
+          {
+            "title": "Mock Step 10 - Test Android Configuration",
+            "body": "This is a fake body text for testing Markdown rendering.\r\nIt mimic the original layout with headers.\r\n\r\n---\r\n\r\n- Step 1: Open app\r\n- Step 2: Import config\r\n\r\n> [!WARNING]\r\n> Global VPN flag behavior test string.",
+            "comments": {
+              "nodes": [
+                {
+                  "body": "Fake comment: Everything works on Wi-Fi connection",
+                  "replies": {
+                    "nodes": [
+                      {
+                        "body": "Fake reply 1: Mobile internet whitelist mode activated."
+                      },
+                      {
+                        "body": "Fake reply 2: Confirmed, working on IPv4 as well."
+                      }
+                    ]
+                  }
+                },
+                {
+                  "body": "Fake comment 2: Updated application routing settings block",
+                  "replies": {
+                    "nodes": [
+                      {
+                        "body": "Fake reply 3: Where can I find the background service toggle?"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          {
+            "title": "Mock Step 12 - Backup connection relay via proxy",
+            "body": "Alternative route test configuration using mock provider.\r\nVariables configuration:\r\n```\r\nPATH = /test-route\r\nPASS = http://127.0.0.1:8080\r\n```",
+            "comments": {
+              "nodes": [
+                {
+                  "body": "Fake comment 3: Web service deployed successfully on host",
+                  "replies": {
+                    "nodes": [
+                      {
+                        "body": "Fake reply 4: Did it catch the connection on the first try?"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}
