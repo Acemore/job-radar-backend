@@ -1,4 +1,6 @@
+import json
 import os
+from pathlib import Path
 
 import asyncpg
 import psycopg2
@@ -85,3 +87,18 @@ def seed_vacancies(test_db):
 
     cursor.close()
     conn.close()
+
+
+@pytest.fixture(scope="function")
+def github_mock_data():
+    tests_dir_path = Path(__file__).parent
+
+    with open(
+        f"{tests_dir_path}/fixtures/github_mock.json",
+        "r",
+        encoding="utf-8",
+    ) as f:
+        raw_data = f.read()
+    data = json.loads(raw_data)
+
+    yield data
