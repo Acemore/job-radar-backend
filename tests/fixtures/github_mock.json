@@ -5,11 +5,11 @@
         "nodes": [
           {
             "title": "Mock Step 10 - Test Android Configuration",
-            "body": "This is a fake body text for testing Markdown rendering.\r\nIt mimic the original layout with headers.\r\n\r\n---\r\n\r\n- Step 1: Open app\r\n- Step 2: Import config\r\n\r\n> [!WARNING]\r\n> Global VPN flag behavior test string.",
+            "body": "This is a fake body text for testing Markdown rendering.\r\nIt mimic the original layout with headers.\r\n\r\n---\r\n\r\n- Step 1: Open app\r\n- Step 2: Import config\r\n\r\n> [!WARNING]\r\n> Global VPN flag behavior test string. Connect to 198.51.100.42 or 2001:db8:85a3::8a2e:370:7334, support mail is test@gmail.com",
             "comments": {
               "nodes": [
                 {
-                  "body": "Fake comment: Everything works on Wi-Fi connection",
+                  "body": "Fake comment: Everything works on Wi-Fi connection. Keys are in C:\\Users\\random_user\\info\\keys Logs are in /home/random_user, call 89101234567",
                   "replies": {
                     "nodes": [
                       {

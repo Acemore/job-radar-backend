@@ -41,6 +41,14 @@ async def test_db():
             created_at TIMESTAMPTZ NOT NULL
         );
     """)
+    await test_conn.execute("""
+        CREATE TABLE IF NOT EXISTS candidate_background (
+            id SERIAL PRIMARY KEY,
+            title VARCHAR(255) NOT NULL,
+            body TEXT NOT NULL,
+            comments JSONB NOT NULL DEFAULT '[]'::jsonb
+        );
+    """)
     await test_conn.close()
 
     os.environ["DATABASE_URL"] = test_dsn
