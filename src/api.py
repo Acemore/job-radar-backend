@@ -5,8 +5,9 @@ import asyncpg
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request
 
+from src.schemas import VacancyResponse
+
 from .db_manager import get_vacancies
-from .schemas import VacancyResponse
 
 load_dotenv()
 

@@ -1,11 +1,6 @@
 from pydantic import BaseModel, model_validator
 
 
-class VacancyResponse(BaseModel):
-    title: str
-    company_name: str
-
-
 class GithubReplySchema(BaseModel):
     body: str
 
