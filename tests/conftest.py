@@ -6,12 +6,15 @@ import asyncpg
 import psycopg2
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.engine import make_url
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.api import app
+from src.database import Base
 
 
 @pytest.fixture(scope="function")
-def client(test_db):
+def client(db_engine):
     with TestClient(app) as c:
         yield c
 
@@ -31,16 +34,6 @@ async def test_db():
     await conn.close()
 
     test_conn = await asyncpg.connect(test_dsn)
-    await test_conn.execute("""
-        CREATE TABLE IF NOT EXISTS vacancies (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            company_name VARCHAR(255) NOT NULL,
-            salary INTEGER,
-            description TEXT,
-            created_at TIMESTAMPTZ NOT NULL
-        );
-    """)
     await test_conn.execute("""
         CREATE TABLE IF NOT EXISTS candidate_background (
             id SERIAL PRIMARY KEY,
@@ -69,16 +62,47 @@ async def test_db():
 
 
 @pytest.fixture(scope="function")
-def seed_vacancies(test_db):
-    conn = psycopg2.connect(test_db)
+async def db_engine(test_db):
+    dsn = os.environ["DATABASE_URL"]
+
+    url = make_url(dsn)
+    url = url._replace(drivername="postgresql+asyncpg")
+
+    engine = create_async_engine(url)
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    yield engine
+
+    await engine.dispose()
+
+
+@pytest.fixture(scope="function")
+async def db_session(db_engine):
+    async_session = async_sessionmaker(
+        db_engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
+
+    async with async_session() as session:
+        yield session
+        await session.rollback()
+
+
+@pytest.fixture(scope="function")
+def seed_vacancies(db_engine):
+    dsn = os.environ["DATABASE_URL"]
+    conn = psycopg2.connect(dsn)
     cursor = conn.cursor()
 
     cursor.execute("""
         INSERT INTO vacancies
-        (title, company_name, salary, description, created_at)
+        (title, company_name, salary, link, created_at)
         VALUES
-        ('Python Developer', 'Google', 150000, 'Great job', NOW()),
-        ('FastAPI Engineer', 'Yandex', 200000, 'Async power', NOW());
+        ('Python Developer', 'Google', 150000, 'https://habr.com', NOW()),
+        ('FastAPI Engineer', 'Yandex', 200000, 'https://hh.ru', NOW());
     """)
     conn.commit()
 
@@ -87,7 +111,7 @@ def seed_vacancies(test_db):
 
     yield
 
-    conn = psycopg2.connect(test_db)
+    conn = psycopg2.connect(dsn)
     cursor = conn.cursor()
 
     cursor.execute("TRUNCATE TABLE vacancies RESTART IDENTITY;")
