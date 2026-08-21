@@ -1,11 +1,12 @@
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.vacancy import VacancyModel
 from src.repositories.vacancy import VacancyRepository
 from src.schemas import VacancyDTO
 
 
-async def test_create_many_success(db_session):
+async def test_create_many_success(db_session: AsyncSession):
     vacancies = [
         VacancyDTO(
             title="Python Developer",
@@ -45,7 +46,7 @@ async def test_create_many_success(db_session):
     assert vacancies_by_link["https://hh.ru"].salary == "300 000 ₽"
 
 
-async def test_create_many_deduplication(db_session):
+async def test_create_many_deduplication(db_session: AsyncSession):
     initial_vacancy = VacancyDTO(
         title="Data Engineer",
         company_name="Big Data Corp",
@@ -87,7 +88,7 @@ async def test_create_many_deduplication(db_session):
     assert "https://hh.ru" in vacancies_by_link
 
 
-async def test_create_many_internal_duplicates_in_batch(db_session):
+async def test_create_many_internal_duplicates_in_batch(db_session: AsyncSession):
     batch_with_internal_duplicates = [
         VacancyDTO(
             title="QA Engineer",
@@ -124,3 +125,42 @@ async def test_create_many_internal_duplicates_in_batch(db_session):
 
     assert "https://habr.com" in vacancies_by_link
     assert "https://hh.ru" in vacancies_by_link
+
+
+async def test_get_all_success(db_session: AsyncSession):
+    original_vacancies = [
+        VacancyDTO(
+            title="Python Developer",
+            company_name="Cyber Core Tech",
+            salary="от 150 000 до 250 000 ₽",
+            link="https://habr.com",
+        ),
+        VacancyDTO(
+            title="FastAPI Engineer",
+            company_name="Async Team",
+            salary="300 000 ₽",
+            link="https://hh.ru",
+        ),
+    ]
+    repo = VacancyRepository(db_session)
+
+    await repo.create_many(original_vacancies)
+    db_vacancies = await repo.get_all()
+
+    assert len(db_vacancies) == 2
+
+    vacancy = db_vacancies[0]
+
+    assert isinstance(vacancy, VacancyDTO)
+
+    assert vacancy.title == "Python Developer"
+    assert vacancy.company_name == "Cyber Core Tech"
+    assert vacancy.salary == "от 150 000 до 250 000 ₽"
+    assert vacancy.link == "https://habr.com"
+
+
+async def test_get_all_empty(db_session: AsyncSession):
+    repo = VacancyRepository(db_session)
+    vacancies = await repo.get_all()
+
+    assert len(vacancies) == 0
