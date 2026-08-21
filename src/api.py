@@ -1,13 +1,13 @@
 import os
 from contextlib import asynccontextmanager
 
-import asyncpg
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.schemas import VacancyResponse
-
-from .db_manager import get_vacancies
+from src.database import get_session, get_sqlalchemy_dsn
+from src.repositories.vacancy import VacancyRepository
+from src.schemas import VacancyDTO, VacancyResponse
 
 load_dotenv()
 
@@ -15,10 +15,21 @@ load_dotenv()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     dsn = os.environ["DATABASE_URL"]
+    database_url = get_sqlalchemy_dsn(dsn)
 
-    async with asyncpg.create_pool(dsn) as pool:
-        app.state.pool = pool
-        yield
+    engine = create_async_engine(database_url)
+    app.state.engine = engine
+
+    session_factory = async_sessionmaker(
+        engine,
+        expire_on_commit=False,
+        class_=AsyncSession,
+    )
+    app.state.session_factory = session_factory
+
+    yield
+
+    await engine.dispose()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -30,12 +41,12 @@ async def health_check() -> dict:
 
 
 @app.get("/api/vacancies", response_model=list[VacancyResponse])
-async def get_all_vacancies(request: Request) -> list[VacancyResponse]:
-    pool = request.app.state.pool
+async def get_all_vacancies(
+    session: AsyncSession = Depends(get_session),
+) -> list[VacancyDTO]:
+    repository = VacancyRepository(session)
 
-    raw_vacancies = await get_vacancies(pool)
-
-    return [VacancyResponse(**vacancy) for vacancy in raw_vacancies]
+    return await repository.get_all()
 
 
 if __name__ == "__main__":

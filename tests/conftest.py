@@ -6,11 +6,10 @@ import asyncpg
 import psycopg2
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.api import app
-from src.database import Base
+from src.database import Base, get_sqlalchemy_dsn
 
 
 @pytest.fixture(scope="function")
@@ -64,9 +63,7 @@ async def test_db():
 @pytest.fixture(scope="function")
 async def db_engine(test_db):
     dsn = os.environ["DATABASE_URL"]
-
-    url = make_url(dsn)
-    url = url._replace(drivername="postgresql+asyncpg")
+    url = get_sqlalchemy_dsn(dsn)
 
     engine = create_async_engine(url)
 

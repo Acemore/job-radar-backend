@@ -32,3 +32,13 @@ class VacancyRepository:
             await self.session.flush()
 
         return len(new_vacancy_models)
+
+    async def get_all(self) -> list[VacancyDTO]:
+        result = await self.session.execute(select(VacancyModel))
+        db_vacancies = result.scalars().all()
+
+        dto_vacancies = [
+            VacancyDTO.model_validate(db_vacancy) for db_vacancy in db_vacancies
+        ]
+
+        return dto_vacancies
