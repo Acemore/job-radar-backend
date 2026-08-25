@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from sqlalchemy import select
 from test_habr_career_fetcher import TEST_RESPONSE_TEXT
 
+from src.exceptions.fetcher import FetcherTimeoutError
 from src.fetchers.habr_career import HABR_CAREER_URL
 from src.models.vacancy import VacancyModel
 from src.schedulers.habr_career import run_habr_career_job
@@ -37,3 +38,19 @@ async def test_run_habr_career_job(db_session):
     assert target_vacancy.company_name == "Test Company"
     assert target_vacancy.salary == "от 150 000 ₽"
     assert target_vacancy.link == "https://career.habr.com/vacancies/10001"
+
+
+async def test_run_habr_career_job_fetcher_error(db_session):
+    with patch(
+        "src.schedulers.habr_career.fetch_habr_career",
+        new_callable=AsyncMock,
+    ) as mock_fetch:
+        mock_fetch.side_effect = FetcherTimeoutError(
+            "https://habr.com",
+            Exception("timeout"),
+        )
+
+        with patch("src.schedulers.habr_career.parse_habr_vacancies") as mock_parser:
+            await run_habr_career_job(db_session)
+
+            mock_parser.assert_not_called()
