@@ -3,13 +3,14 @@ import os
 from pathlib import Path
 
 import asyncpg
-import psycopg2
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.api import app
 from src.database import Base, get_sqlalchemy_dsn
+from src.models.vacancy import VacancyModel
 
 
 @pytest.fixture(scope="function")
@@ -31,17 +32,6 @@ async def test_db():
     await conn.execute("DROP DATABASE IF EXISTS job_radar_test;")
     await conn.execute("CREATE DATABASE job_radar_test;")
     await conn.close()
-
-    test_conn = await asyncpg.connect(test_dsn)
-    await test_conn.execute("""
-        CREATE TABLE IF NOT EXISTS candidate_background (
-            id SERIAL PRIMARY KEY,
-            title VARCHAR(255) NOT NULL,
-            body TEXT NOT NULL,
-            comments JSONB NOT NULL DEFAULT '[]'::jsonb
-        );
-    """)
-    await test_conn.close()
 
     os.environ["DATABASE_URL"] = test_dsn
 
@@ -89,33 +79,28 @@ async def db_session(db_engine):
 
 
 @pytest.fixture(scope="function")
-def seed_vacancies(db_engine):
-    dsn = os.environ["DATABASE_URL"]
-    conn = psycopg2.connect(dsn)
-    cursor = conn.cursor()
+async def seed_vacancies(db_session):
+    first_vacancy = VacancyModel(
+        title="Python Developer",
+        company_name="Google",
+        salary="150000",
+        link="https://habr.com",
+    )
+    second_vacancy = VacancyModel(
+        title="FastAPI Engineer",
+        company_name="Yandex",
+        salary="200000",
+        link="https://hh.ru",
+    )
+    vacancies = [first_vacancy, second_vacancy]
 
-    cursor.execute("""
-        INSERT INTO vacancies
-        (title, company_name, salary, link, created_at)
-        VALUES
-        ('Python Developer', 'Google', 150000, 'https://habr.com', NOW()),
-        ('FastAPI Engineer', 'Yandex', 200000, 'https://hh.ru', NOW());
-    """)
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    db_session.add_all(vacancies)
+    await db_session.commit()
 
     yield
 
-    conn = psycopg2.connect(dsn)
-    cursor = conn.cursor()
-
-    cursor.execute("TRUNCATE TABLE vacancies RESTART IDENTITY;")
-    conn.commit()
-
-    cursor.close()
-    conn.close()
+    await db_session.execute(delete(VacancyModel))
+    await db_session.commit()
 
 
 @pytest.fixture(scope="function")
