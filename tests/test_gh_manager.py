@@ -1,8 +1,7 @@
-import json
-
-import asyncpg
+from sqlalchemy import select
 
 from src import gh_manager
+from src.models.candidate_background import CandidateBackgroundModel
 from src.sanitizer import sanitize_text
 
 
@@ -27,7 +26,9 @@ async def test_get_github_background_mock(monkeypatch, github_mock_data):
     )
 
 
-async def test_save_candidate_background_to_db(monkeypatch, github_mock_data, test_db):
+async def test_save_candidate_background_to_db(
+    monkeypatch, github_mock_data, test_db, db_session
+):
     async def mock_fetch(*args, **kwargs):
         return github_mock_data
 
@@ -52,36 +53,35 @@ async def test_save_candidate_background_to_db(monkeypatch, github_mock_data, te
     if comments_data.get("nodes"):
         first_comment_body = comments_data["nodes"][0]["body"]
         comments_data["nodes"][0]["body"] = sanitize_text(first_comment_body)
-    serialized_comments = json.dumps(comments_data, ensure_ascii=False)
 
-    conn = await asyncpg.connect(test_db)
-    await conn.execute(
-        "INSERT INTO candidate_background (title, body, comments) VALUES ($1, $2, $3);",
-        cleaned_title,
-        cleaned_body,
-        serialized_comments,
+    new_background = CandidateBackgroundModel(
+        title=cleaned_title,
+        body=cleaned_body,
+        comments=comments_data,
     )
-    discussion = await conn.fetchrow(
-        "SELECT * FROM candidate_background WHERE title = $1;",
-        cleaned_title,
+    db_session.add(new_background)
+    await db_session.flush()
+
+    query = select(CandidateBackgroundModel).where(
+        CandidateBackgroundModel.title == cleaned_title
     )
-    await conn.close()
+    result = await db_session.execute(query)
+    discussion = result.scalar_one_or_none()
 
     assert discussion is not None
 
-    assert discussion["id"] is not None
-    assert isinstance(discussion["id"], int)
+    assert discussion.id is not None
+    assert isinstance(discussion.id, int)
 
-    assert discussion["title"] == cleaned_title
-    assert discussion["body"] == cleaned_body
+    assert discussion.title == cleaned_title
+    assert discussion.body == cleaned_body
 
-    parsed_comments = json.loads(discussion["comments"])
-    assert isinstance(parsed_comments, dict)
-    assert isinstance(parsed_comments["nodes"], list)
-    assert len(parsed_comments["nodes"]) > 0
-    assert parsed_comments == comments_data
+    assert isinstance(discussion.comments, dict)
+    assert isinstance(discussion.comments["nodes"], list)
+    assert len(discussion.comments["nodes"]) > 0
+    assert discussion.comments == comments_data
 
-    assert "[MASKED_EMAIL]" in discussion["body"]
-    assert discussion["body"].count("[MASKED_IP]") == 2
-    assert "[MASKED_PHONE]" in parsed_comments["nodes"][0]["body"]
-    assert parsed_comments["nodes"][0]["body"].count("[MASKED_PATH]") == 2
+    assert "[MASKED_EMAIL]" in discussion.body
+    assert discussion.body.count("[MASKED_IP]") == 2
+    assert "[MASKED_PHONE]" in discussion.comments["nodes"][0]["body"]
+    assert discussion.comments["nodes"][0]["body"].count("[MASKED_PATH]") == 2
