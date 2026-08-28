@@ -35,5 +35,5 @@ jobs:
 
       - name: Run tests
         env:
-          DATABASE_URL: postgresql+asyncpg://postgres:secret_password@localhost:5432/job_radar
+          DATABASE_URL: postgresql://postgres:secret_password@localhost:5432/job_radar
         run: uv run pytest
