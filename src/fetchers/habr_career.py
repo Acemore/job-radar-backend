@@ -1,10 +1,12 @@
 import httpx
 
 from src.exceptions.fetcher import FetcherNetworkError, FetcherTimeoutError
+from src.utils.retry import retry
 
 HABR_CAREER_URL = "https://career.habr.com"
 
 
+@retry(attempts=3, delay=1.0)
 async def fetch_habr_career(client: httpx.AsyncClient) -> str:
     try:
         response = await client.get(HABR_CAREER_URL)
