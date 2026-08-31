@@ -1,7 +1,6 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from sqlalchemy import select
-from test_habr_career_fetcher import TEST_RESPONSE_TEXT
 
 from src.exceptions.fetcher import FetcherTimeoutError
 from src.fetchers.habr_career import HABR_CAREER_URL
@@ -9,11 +8,11 @@ from src.models.vacancy import VacancyModel
 from src.schedulers.habr_career import run_habr_career_job
 
 
-async def test_run_habr_career_job(db_session):
+async def test_run_habr_career_job(db_session, habr_mock_html):
     client = AsyncMock()
     response = Mock()
 
-    response.text = TEST_RESPONSE_TEXT
+    response.text = habr_mock_html
     client.get.return_value = response
 
     with patch("src.schedulers.habr_career.AsyncClient") as mock_client:

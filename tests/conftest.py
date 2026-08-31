@@ -116,3 +116,56 @@ def github_mock_data():
     data = json.loads(raw_data)
 
     yield data
+
+
+@pytest.fixture(scope="session")
+def habr_mock_html() -> str:
+    return (
+        '<div class="cards-list">'
+        '<div class="vacancy-card">'
+        '<div class="vacancy-card__title">'
+        '<a class="vacancy-card__title-link" href="/vacancies/10001">'
+        "Python Developer (FastAPI)"
+        "</a>"
+        "</div>"
+        '<div class="vacancy-card__company">'
+        '<a class="vacancy-card__company-title" href="/companies/test_company">'
+        "Test Company"
+        "</a>"
+        "</div>"
+        '<div class="vacancy-card__skills">'
+        '<span class="vacancy-card__skill">Python</span>'
+        '<span class="vacancy-card__skill">FastAPI</span>'
+        "</div>"
+        '<div class="vacancy-card__salary">'
+        '<span class="salary">от 150 000 ₽</span>'
+        "</div>"
+        "</div>"
+        "</div>"
+    )
+
+
+@pytest.fixture(scope="session")
+def hh_mock_data() -> dict:
+    return {
+        "items": [
+            {
+                "id": "105673892",
+                "name": "Python Developer (FastAPI)",
+                "salary": {
+                    "from": 150000,
+                    "to": 220000,
+                    "currency": "RUR",
+                    "gross": False,
+                },
+                "employer": {"id": "1455", "name": "HeadHunter API Team"},
+                "schedule": {"id": "remote", "name": "Удаленная работа"},
+                "employment": {"id": "full", "name": "Полная занятость"},
+                "alternate_url": "https://hh.ru",
+            }
+        ],
+        "found": 1,
+        "pages": 1,
+        "per_page": 20,
+        "page": 0,
+    }
