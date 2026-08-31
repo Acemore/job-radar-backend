@@ -28,7 +28,8 @@ async def test_db():
     base_dsn, _ = dsn.rsplit("/", 1)
     test_dsn = f"{base_dsn}/job_radar_test"
 
-    conn = await asyncpg.connect(dsn)
+    clean_dsn = dsn.replace("+asyncpg", "")
+    conn = await asyncpg.connect(clean_dsn)
     await conn.execute("DROP DATABASE IF EXISTS job_radar_test;")
     await conn.execute("CREATE DATABASE job_radar_test;")
     await conn.close()
