@@ -4,7 +4,7 @@ from src.schemas.github import (
     GithubGraphQLResponseSchema,
     GithubReplySchema,
 )
-from src.schemas.habr import VacancyDTO, VacancyResponse
+from src.schemas.vacancy import VacancyDTO, VacancyResponse
 
 __all__ = [
     "GithubCommentSchema",
