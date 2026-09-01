@@ -170,3 +170,25 @@ def hh_mock_data() -> dict:
         "per_page": 20,
         "page": 0,
     }
+
+
+@pytest.fixture(scope="session")
+def hh_mock_dirty_data() -> dict:
+    return {
+        "items": [
+            {
+                "id": "999999",
+                "name": "Python Developer",
+                "employer": {},
+                "salary": None,
+                "alternate_url": "https://test1.ru",
+            },
+            {
+                "id": "888888",
+                "name": "Senior FastAPI Engineer",
+                "employer": {"name": "Mishka Tech"},
+                "salary": {"from": None, "to": 400000, "currency": "EUR"},
+                "alternate_url": "https://test2.ru",
+            },
+        ]
+    }
