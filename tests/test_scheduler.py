@@ -3,7 +3,8 @@ from unittest.mock import Mock
 
 from apscheduler.triggers.interval import IntervalTrigger
 
-from src.schedulers.habr_career import _habr_career_job_worker, init_scheduler
+from src.schedulers.habr_career import _habr_career_job_worker
+from src.schedulers.manager import init_scheduler
 
 
 def test_init_scheduler():
@@ -12,7 +13,7 @@ def test_init_scheduler():
 
     jobs = scheduler.get_jobs()
 
-    assert len(jobs) == 1
+    assert len(jobs) == 2
 
     target_job = next(
         (job for job in jobs if job.func == _habr_career_job_worker),
