@@ -15,6 +15,7 @@ from src.models.vacancy import VacancyModel
 
 @pytest.fixture(scope="function")
 def client(db_engine):
+    app.state.disable_scheduler_start = True
     with TestClient(app) as c:
         yield c
 
