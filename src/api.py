@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from src.database import get_session, get_sqlalchemy_dsn
 from src.repositories.vacancy import VacancyRepository
+from src.schedulers.manager import init_scheduler
 from src.schemas import VacancyDTO, VacancyResponse
 
 load_dotenv()
@@ -27,7 +28,15 @@ async def lifespan(app: FastAPI):
     )
     app.state.session_factory = session_factory
 
+    scheduler = init_scheduler(session_factory)
+    if not getattr(app.state, "disable_scheduler_start", False):
+        scheduler.start()
+    app.state.scheduler = scheduler
+
     yield
+
+    if scheduler.running:
+        scheduler.shutdown()
 
     await engine.dispose()
 
