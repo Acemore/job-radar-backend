@@ -1,8 +1,8 @@
-# 0001-core-stack-and-package-design
+# 0001. Core Stack and Package Design
 
 ## Status
 
-`Accepted`
+Accepted
 
 ## Context
 
@@ -25,9 +25,12 @@ Approved following stack and package design:
 
 ## Consequences
 
-* *Pros:*
-  * High parsing speed.
-  * Safe concurrency at the DB level due to in-memory repository deduplication.
-  * Clean code decomposition (easy to add new sources).
-* *Cons:*
-  * Async code base requires more strict transaction control in tests (`commit / flush` nuances).
+### Pros
+
+* High parsing speed.
+* Safe concurrency at the DB level due to in-memory repository deduplication.
+* Clean code decomposition (easy to add new sources).
+
+### Cons
+
+* Async code base requires more strict transaction control in tests (`commit / flush` nuances).
