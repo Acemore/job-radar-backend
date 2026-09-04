@@ -20,7 +20,17 @@ async def test_run_hh_api_job(db_session, hh_mock_data):
 
         await run_hh_api_job(db_session)
 
-    client.get.assert_awaited_once_with(HH_VACANCIES_URL, params={"text": "Python"})
+    client.get.assert_awaited_once_with(
+        HH_VACANCIES_URL,
+        params={"text": "Python"},
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/128.0.0.0 Safari/537.36"
+            )
+        },
+    )
 
     db_vacancies_object = await db_session.execute(select(VacancyModel))
     db_vacancies = db_vacancies_object.scalars().all()

@@ -3,7 +3,7 @@ import httpx
 from src.exceptions.fetcher import FetcherNetworkError, FetcherTimeoutError
 from src.utils.retry import retry
 
-HABR_CAREER_URL = "https://career.habr.com"
+HABR_CAREER_URL = "https://career.habr.com/vacancies"
 
 
 @retry(attempts=3, delay=1.0)
