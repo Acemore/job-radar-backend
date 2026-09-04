@@ -19,7 +19,17 @@ async def test_fetch_hh_vacancies_success(hh_mock_data):
     response_json = await fetch_hh_vacancies(client, query_text=query_text)
 
     assert response_json == hh_mock_data
-    client.get.assert_called_once_with(HH_VACANCIES_URL, params={"text": query_text})
+    client.get.assert_called_once_with(
+        HH_VACANCIES_URL,
+        params={"text": query_text},
+        headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/128.0.0.0 Safari/537.36"
+            )
+        },
+    )
 
 
 async def test_fetch_hh_vacancies_timeout_raises():
