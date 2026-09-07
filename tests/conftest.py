@@ -10,7 +10,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from src.api import app
 from src.database import Base, get_sqlalchemy_dsn
+from src.logger import configure_logging
 from src.models.vacancy import VacancyModel
+
+
+def pytest_configure(config):
+    configure_logging(to_console=True)
 
 
 @pytest.fixture(scope="function")

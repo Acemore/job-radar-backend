@@ -6,11 +6,13 @@ from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.database import get_session, get_sqlalchemy_dsn
+from src.logger import configure_logging
 from src.repositories.vacancy import VacancyRepository
 from src.schedulers.manager import init_scheduler
 from src.schemas import VacancyDTO, VacancyResponse
 
 load_dotenv()
+configure_logging()
 
 
 @asynccontextmanager
