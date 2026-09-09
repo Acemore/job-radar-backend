@@ -14,7 +14,7 @@ dependencies = [
     "fastapi>=0.140.0",
     "httpx>=0.28.1",
     "phonenumbers>=9.0.36",
-    "python-dotenv>=1.2.2",
+    "pydantic-settings>=2.15.0",
     "selectolax>=0.4.11",
     "sqlalchemy>=2.0.52",
     "structlog>=26.1.0",
@@ -31,7 +31,6 @@ select = ["E", "F", "I"]
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.1",
-    "psycopg2-binary>=2.9.12",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "ruff>=0.16.0",

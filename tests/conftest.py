@@ -1,5 +1,4 @@
 import json
-import os
 from pathlib import Path
 
 import asyncpg
@@ -9,6 +8,7 @@ from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from src.api import app
+from src.config import settings
 from src.database import Base, get_sqlalchemy_dsn
 from src.logger import configure_logging
 from src.models.vacancy import VacancyModel
@@ -27,7 +27,7 @@ def client(db_engine):
 
 @pytest.fixture(scope="function")
 async def test_db():
-    dsn = os.environ["DATABASE_URL"]
+    dsn = settings.DATABASE_URL
     if not dsn:
         raise RuntimeError("DATABASE_URL variable is not set in environment")
 
@@ -40,11 +40,11 @@ async def test_db():
     await conn.execute("CREATE DATABASE job_radar_test;")
     await conn.close()
 
-    os.environ["DATABASE_URL"] = test_dsn
+    settings.DATABASE_URL = test_dsn
 
     yield test_dsn
 
-    os.environ["DATABASE_URL"] = dsn
+    settings.DATABASE_URL = dsn
 
     conn = await asyncpg.connect(dsn)
     await conn.execute("""
@@ -59,8 +59,7 @@ async def test_db():
 
 @pytest.fixture(scope="function")
 async def db_engine(test_db):
-    dsn = os.environ["DATABASE_URL"]
-    url = get_sqlalchemy_dsn(dsn)
+    url = get_sqlalchemy_dsn(settings.DATABASE_URL)
 
     engine = create_async_engine(url)
 
