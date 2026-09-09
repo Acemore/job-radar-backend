@@ -1,24 +1,21 @@
-import os
 from contextlib import asynccontextmanager
 
-from dotenv import load_dotenv
 from fastapi import Depends, FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from src.config import settings
 from src.database import get_session, get_sqlalchemy_dsn
 from src.logger import configure_logging
 from src.repositories.vacancy import VacancyRepository
 from src.schedulers.manager import init_scheduler
 from src.schemas import VacancyDTO, VacancyResponse
 
-load_dotenv()
 configure_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    dsn = os.environ["DATABASE_URL"]
-    database_url = get_sqlalchemy_dsn(dsn)
+    database_url = get_sqlalchemy_dsn(settings.DATABASE_URL)
 
     engine = create_async_engine(database_url)
     app.state.engine = engine

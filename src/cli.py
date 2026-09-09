@@ -1,19 +1,15 @@
 import asyncio
-import os
 
-from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from src.config import settings
 from src.database import get_sqlalchemy_dsn
 from src.schedulers.habr_career import run_habr_career_job
 from src.schedulers.hh_api import run_hh_api_job
 
-load_dotenv()
-
 
 async def main():
-    dsn = os.environ["DATABASE_URL"]
-    database_url = get_sqlalchemy_dsn(dsn)
+    database_url = get_sqlalchemy_dsn(settings.DATABASE_URL)
 
     engine = create_async_engine(database_url)
     session_factory = async_sessionmaker(
