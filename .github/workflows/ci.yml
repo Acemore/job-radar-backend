@@ -27,16 +27,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository code
+        uses: actions/checkout@v4
 
-      - uses: astral-sh/setup-uv@v5
+      - name: Set up uv package manager
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-      - uses: pre-commit/action@v3.0.1
+      - name: Run pre-commit hooks (linters & formatters)
+        uses: pre-commit/action@v3.0.1
 
-      - name: Run tests
+      - name: Run test suite with isolated database
         env:
           DATABASE_URL: postgresql://postgres:secret_password@localhost:5432/job_radar
         run: uv run pytest
 
-      - name: Build Docker image
+      - name: Build Docker image for deployment validation
         run: docker build -t job-radar-backend .
