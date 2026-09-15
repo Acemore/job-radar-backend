@@ -1,8 +1,9 @@
 from unittest.mock import AsyncMock, Mock, patch
 
+import httpx
 from sqlalchemy import select
 
-from src.exceptions.fetcher import FetcherTimeoutError
+from src.exceptions.fetcher import FetcherNetworkError
 from src.fetchers.hh_api import HH_VACANCIES_URL
 from src.models.vacancy import VacancyModel
 from src.schedulers.hh_api import run_hh_api_job
@@ -13,14 +14,14 @@ async def test_run_hh_api_job(db_session, hh_mock_data):
     response = Mock()
 
     response.json.return_value = hh_mock_data
-    client.get.return_value = response
+    client.make_request.return_value = response
 
-    with patch("src.schedulers.hh_api.AsyncClient") as mock_client:
-        mock_client.return_value.__aenter__.return_value = client
+    with patch("src.schedulers.hh_api.ResilientNetworkClient") as mock_client:
+        mock_client.return_value = client
 
         await run_hh_api_job(db_session)
 
-    client.get.assert_awaited_once_with(
+    client.make_request.assert_awaited_once_with(
         HH_VACANCIES_URL,
         params={"text": "Python"},
         headers={
@@ -54,9 +55,9 @@ async def test_run_hh_api_job_fetcher_error(db_session):
         "src.schedulers.hh_api.fetch_hh_vacancies",
         new_callable=AsyncMock,
     ) as mock_fetch:
-        mock_fetch.side_effect = FetcherTimeoutError(
-            "https://hh.ru",
-            Exception("timeout"),
+        fake_network_error = httpx.ConnectError("Network dead")
+        mock_fetch.side_effect = FetcherNetworkError(
+            "Network failure", original_exception=fake_network_error
         )
 
         with patch("src.schedulers.hh_api.parse_hh_vacancies") as mock_parser:

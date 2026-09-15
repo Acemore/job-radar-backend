@@ -1,8 +1,9 @@
 from unittest.mock import AsyncMock, Mock, patch
 
+import httpx
 from sqlalchemy import select
 
-from src.exceptions.fetcher import FetcherTimeoutError
+from src.exceptions.fetcher import FetcherNetworkError
 from src.fetchers.habr_career import HABR_CAREER_URL
 from src.models.vacancy import VacancyModel
 from src.schedulers.habr_career import run_habr_career_job
@@ -13,14 +14,14 @@ async def test_run_habr_career_job(db_session, habr_mock_html):
     response = Mock()
 
     response.text = habr_mock_html
-    client.get.return_value = response
+    client.make_request.return_value = response
 
-    with patch("src.schedulers.habr_career.AsyncClient") as mock_client:
-        mock_client.return_value.__aenter__.return_value = client
+    with patch("src.schedulers.habr_career.ResilientNetworkClient") as mock_client:
+        mock_client.return_value = client
 
         await run_habr_career_job(db_session)
 
-    client.get.assert_awaited_once_with(HABR_CAREER_URL)
+    client.make_request.assert_awaited_once_with(HABR_CAREER_URL)
 
     db_vacancies_object = await db_session.execute(select(VacancyModel))
     db_vacancies = db_vacancies_object.scalars().all()
@@ -44,9 +45,9 @@ async def test_run_habr_career_job_fetcher_error(db_session):
         "src.schedulers.habr_career.fetch_habr_career",
         new_callable=AsyncMock,
     ) as mock_fetch:
-        mock_fetch.side_effect = FetcherTimeoutError(
-            "https://habr.com",
-            Exception("timeout"),
+        fake_network_error = httpx.ConnectError("Network dead")
+        mock_fetch.side_effect = FetcherNetworkError(
+            "Network failure", original_exception=fake_network_error
         )
 
         with patch("src.schedulers.habr_career.parse_habr_vacancies") as mock_parser:

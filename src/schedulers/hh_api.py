@@ -1,9 +1,9 @@
 import structlog
-from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from src.exceptions.fetcher import FetcherError
 from src.fetchers.hh_api import fetch_hh_vacancies
+from src.network.client import ResilientNetworkClient
 from src.parsers.hh_api import parse_hh_vacancies
 from src.repositories.vacancy import VacancyRepository
 
@@ -11,13 +11,14 @@ logger = structlog.get_logger()
 
 
 async def run_hh_api_job(session: AsyncSession):
-    async with AsyncClient() as client:
-        try:
-            response_data = await fetch_hh_vacancies(client, "Python")
-        except FetcherError as e:
-            logger.error("hh_api_job_failed", error=str(e))
+    client = ResilientNetworkClient()
 
-            return
+    try:
+        response_data = await fetch_hh_vacancies(client, "Python")
+    except FetcherError as e:
+        logger.error("hh_api_job_failed", error=str(e))
+
+        return
 
     dto_vacancies = parse_hh_vacancies(response_data)
 
