@@ -1,49 +1,4 @@
-import pytest
-
 from src.parsers.habr_career import parse_habr_vacancies
-
-
-@pytest.fixture
-def mock_vacancy_full():
-    return """
-    <div class="vacancy-card">
-        <div class="vacancy-card__title">
-            <a href="/vacancies/10000123">Senior Python Developer</a>
-        </div>
-        <div class="vacancy-card__company-title">
-            <a href="/companies/cyber_core">Cyber Core Tech</a>
-        </div>
-        <div class="vacancy-card__title-line">
-            <div class="salary">
-                от&nbsp;250&nbsp;000&nbsp;до&nbsp;350&nbsp;000&nbsp;₽
-            </div>
-        </div>
-    </div>
-    """
-
-
-@pytest.fixture
-def mock_vacancy_alternative():
-    return """
-    <div class="vacancy-card">
-        <div class="vacancy-card__title">
-            <a href="/vacancies/999999">Frontend Engineer (React)</a>
-        </div>
-        <div class="vacancy-card__company">ООО Рога и Копыта</div>
-        <div class="vacancy-card__salary">до 4 000 $</div>
-    </div>
-    """
-
-
-@pytest.fixture
-def mock_vacancy_empty():
-    return """
-    <div class="vacancy-card">
-        <div class="vacancy-card__title">
-            <a>Анонимная вакансия</a>
-        </div>
-    </div>
-    """
 
 
 def test_parse_full_vacancy(mock_vacancy_full):
