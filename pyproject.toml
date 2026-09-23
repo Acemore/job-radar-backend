@@ -9,6 +9,7 @@ authors = [
 ]
 license = { text = "MIT" }
 dependencies = [
+    "alembic>=1.20.0",
     "apscheduler>=3.11.3",
     "asyncpg>=0.31.0",
     "fastapi>=0.140.0",
@@ -25,8 +26,14 @@ dependencies = [
 Homepage = "https://github.com/Acemore"
 Repository = "https://github.com/Acemore/job-radar-backend"
 
+[tool.ruff]
+extend-exclude = ["alembic"]
+
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[tool.mypy]
+exclude = ["alembic"]
 
 [dependency-groups]
 dev = [

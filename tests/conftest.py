@@ -152,26 +152,66 @@ def habr_mock_html() -> str:
 
 
 @pytest.fixture(scope="session")
-def hh_mock_data() -> dict:
-    return {
-        "items": [
+def hh_mock_data() -> str:
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Работа в Москве, поиск персонала - hh.ru</title>
+    </head>
+    <body>
+        <div id="HH-React-Root" data-qa="main-content">
+            <!-- Имитируем легаси-верстку для проверки отказоустойчивости -->
+            <div data-qa="vacancy-serp__vacancy"></div>
+        </div>
+
+        <!-- Наш главный OpSec-островок INITIAL_STATE, который парсит selectolax -->
+        <template style="display:none" id="HH-Lux-InitialState">
             {
-                "id": "105673892",
-                "name": "Python Developer (FastAPI)",
-                "salary": {
-                    "from": 150000,
-                    "to": 220000,
-                    "currency": "RUR",
-                    "gross": False,
-                },
-                "employer": {"id": "1455", "name": "HeadHunter API Team"},
-                "schedule": {"id": "remote", "name": "Удаленная работа"},
-                "employment": {"id": "full", "name": "Полная занятость"},
-                "alternate_url": "https://hh.ru",
+                "vacancySearchResult": {
+                    "vacancies": [
+                        {
+                            "vacancyId": 137527751,
+                            "name": "Python Developer (FastAPI)",
+                            "company": {
+                                "id": "1455",
+                                "visibleName": "HeadHunter Web Team"
+                            },
+                            "compensation": {
+                                "from": 150000,
+                                "to": 220000,
+                                "currencyCode": "RUR",
+                                "gross": false
+                            }
+                        },
+                        {
+                            "vacancyId": 137546518,
+                            "name": "Fullstack-разработчик",
+                            "company": {
+                                "id": "5033673",
+                                "visibleName": "FAIR-METALL"
+                            },
+                            "compensation": {
+                                "from": 8000000,
+                                "currencyCode": "UZS",
+                                "gross": false
+                            }
+                        },
+                        {
+                            "vacancyId": 137533168,
+                            "name": "DevOps Engineer",
+                            "company": {
+                                "id": "2057",
+                                "visibleName": "Водород"
+                            },
+                            "compensation": {
+                                "noCompensation": true
+                            }
+                        }
+                    ]
+                }
             }
-        ],
-        "found": 1,
-        "pages": 1,
-        "per_page": 20,
-        "page": 0,
-    }
+        </template>
+    </body>
+    </html>
+    """.strip()
