@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from unittest.mock import AsyncMock, Mock, patch
 
 import httpx
@@ -19,7 +20,13 @@ async def test_run_habr_career_job(db_session, habr_mock_html):
     with patch("src.schedulers.habr_career.ResilientNetworkClient") as mock_client:
         mock_client.return_value = client
 
-        await run_habr_career_job(db_session)
+        @asynccontextmanager
+        async def fake_session_factory():
+            yield db_session
+
+        await run_habr_career_job(
+            session_factory=fake_session_factory, network_client=client
+        )
 
     client.make_request.assert_awaited_once_with(HABR_CAREER_URL)
 
@@ -51,6 +58,15 @@ async def test_run_habr_career_job_fetcher_error(db_session):
         )
 
         with patch("src.schedulers.habr_career.parse_habr_vacancies") as mock_parser:
-            await run_habr_career_job(db_session)
+
+            @asynccontextmanager
+            async def fake_session_factory():
+                yield db_session
+
+            client = AsyncMock()
+
+            await run_habr_career_job(
+                session_factory=fake_session_factory, network_client=client
+            )
 
             mock_parser.assert_not_called()
