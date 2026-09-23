@@ -2,6 +2,7 @@ import asyncio
 
 import httpx
 
+from src.config import settings
 from src.exceptions.fetcher import FetcherNetworkError
 from src.network.routing import BaseNodeProvider
 
@@ -10,12 +11,22 @@ class ResilientNetworkClient:
     def __init__(
         self,
         node_provider: BaseNodeProvider | None = None,
-        max_direct_attempts: int = 2,
-        backoff_factor: float = 0.5,
+        max_direct_attempts: int | None = None,
+        backoff_factor: float | None = None,
     ):
         self.node_provider = node_provider
-        self.max_direct_attempts = max_direct_attempts
-        self.backoff_factor = backoff_factor
+
+        self.backoff_factor = (
+            backoff_factor
+            if backoff_factor is not None
+            else settings.NETWORK_BACKOFF_FACTOR
+        )
+
+        self.max_direct_attempts = (
+            max_direct_attempts
+            if max_direct_attempts is not None
+            else settings.NETWORK_MAX_DIRECT_ATTEMPTS
+        )
 
     async def make_request(
         self, url: str, method: str = "GET", **kwargs
@@ -30,7 +41,15 @@ class ResilientNetworkClient:
         while True:
             switch_to_fallback = False
 
-            async with httpx.AsyncClient(proxy=current_fallback_node_url) as client:
+            active_proxy = (
+                current_fallback_node_url
+                if current_fallback_node_url is not None
+                else settings.EXTERNAL_CORE_GATEWAY
+            )
+
+            async with httpx.AsyncClient(
+                proxy=active_proxy, follow_redirects=True
+            ) as client:
                 try:
                     response = await client.request(method, url, **kwargs)
 
