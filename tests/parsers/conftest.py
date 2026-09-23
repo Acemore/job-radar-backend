@@ -45,22 +45,38 @@ def mock_vacancy_empty():
 
 
 @pytest.fixture(scope="session")
-def hh_mock_dirty_data() -> dict:
-    return {
-        "items": [
+def hh_mock_dirty_data() -> str:
+    return """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Стресс-тест парсера - hh.ru</title>
+    </head>
+    <body>
+        <template style="display:none" id="HH-Lux-InitialState">
             {
-                "id": "999999",
-                "name": "Python Developer",
-                "employer": {},
-                "salary": None,
-                "alternate_url": "https://test1.ru",
-            },
-            {
-                "id": "888888",
-                "name": "Senior FastAPI Engineer",
-                "employer": {"name": "Mishka Tech"},
-                "salary": {"from": None, "to": 400000, "currency": "EUR"},
-                "alternate_url": "https://test2.ru",
-            },
-        ]
-    }
+                "vacancySearchResult": {
+                    "vacancies": [
+                        {
+                            "vacancyId": 999999,
+                            "name": "Python Developer",
+                            "company": {},
+                            "compensation": {
+                                "noCompensation": true
+                            }
+                        },
+                        {
+                            "vacancyId": 888888,
+                            "name": "Senior FastAPI Engineer",
+                            "company": null,
+                            "compensation": {
+                                "to": 400000
+                            }
+                        }
+                    ]
+                }
+            }
+        </template>
+    </body>
+    </html>
+    """.strip()
