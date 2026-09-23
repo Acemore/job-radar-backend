@@ -2,27 +2,27 @@ import structlog
 from sqlalchemy.ext.asyncio import async_sessionmaker
 
 from src.exceptions.fetcher import FetcherError
-from src.fetchers.habr_career import fetch_habr_career
+from src.fetchers.hh_web import fetch_hh_vacancies
 from src.network.client import ResilientNetworkClient
-from src.parsers.habr_career import parse_habr_vacancies
+from src.parsers.hh_web import parse_hh_vacancies
 from src.repositories.vacancy import VacancyRepository
 
 logger = structlog.get_logger()
 
 
-async def run_habr_career_job(
+async def run_hh_web_job(
     session_factory: async_sessionmaker, network_client: ResilientNetworkClient
 ):
     try:
-        html_text = await fetch_habr_career(network_client)
+        html_text = await fetch_hh_vacancies(network_client, "Python")
     except FetcherError as e:
-        logger.error("habr_career_job_failed", error=str(e), exc_info=True)
+        logger.error("hh_web_job_failed", error=str(e), exc_info=True)
         return
 
-    dto_vacancies = parse_habr_vacancies(html_text)
+    dto_vacancies = parse_hh_vacancies(html_text)
 
     if not dto_vacancies:
-        logger.info("habr_career_job_no_vacancies_found")
+        logger.info("hh_web_job_no_vacancies_found")
         return
 
     async with session_factory() as session:
