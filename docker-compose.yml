@@ -1,40 +1,40 @@
 services:
   db:
     image: postgres:16-alpine
+    container_name: job_radar_db
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
     ports:
       - 5432:5432
-    environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=jobradar
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d jobradar"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 5s
       timeout: 5s
       retries: 5
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
+    container_name: job_radar_api
+    restart: always
+    env_file:
+      - .env
     ports:
       - 8000:8000
+    volumes:
+      - .:/app
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+    command: sh -c "uv run alembic upgrade head && uv run uvicorn src.api:app --host 0.0.0.0 --port 8000"
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/jobradar
-  scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: python -m src.schedulers.manager
-    depends_on:
-      db:
-        condition: service_healthy
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/jobradar
 
 volumes:
   postgres_data:

@@ -34,7 +34,7 @@ async def main():
     client = ResilientNetworkClient(node_provider=node_provider, max_direct_attempts=1)
 
     try:
-        response = await client.make_request("https://career.habr.com/vacancies")
+        response = await client.make_request("https://hh.ru/search/vacancy")
 
         print(f"Success! Status: {response.status_code}")
     except FetcherNetworkError as e:

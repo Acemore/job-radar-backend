@@ -4,9 +4,11 @@ WORKDIR /app
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+ENV UV_PROJECT_ENVIRONMENT=/venv
+
 COPY pyproject.toml uv.lock ./
 
-RUN uv pip install --system -r pyproject.toml --no-cache
+RUN uv sync --frozen --no-cache
 
 COPY src/ ./src
 COPY scripts/ ./scripts
