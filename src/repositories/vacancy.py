@@ -1,4 +1,5 @@
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.models.vacancy import VacancyModel
@@ -15,23 +16,15 @@ class VacancyRepository:
 
         unique_vacancies_by_link = {vacancy.link: vacancy for vacancy in vacancies}
 
-        dto_links = list(unique_vacancies_by_link.keys())
+        values = [dto.model_dump() for dto in unique_vacancies_by_link.values()]
 
-        query = select(VacancyModel.link).where(VacancyModel.link.in_(dto_links))
-        result = await self.session.execute(query)
-        existing_links = set(result.scalars().all())
+        stmt = pg_insert(VacancyModel).values(values)
+        stmt = stmt.on_conflict_do_nothing(index_elements=[VacancyModel.link])
 
-        new_vacancy_models = [
-            VacancyModel(**dto.model_dump())
-            for link, dto in unique_vacancies_by_link.items()
-            if link not in existing_links
-        ]
+        result = await self.session.execute(stmt)
+        await self.session.flush()
 
-        if new_vacancy_models:
-            self.session.add_all(new_vacancy_models)
-            await self.session.flush()
-
-        return len(new_vacancy_models)
+        return result.rowcount
 
     async def get_all(self) -> list[VacancyDTO]:
         result = await self.session.execute(select(VacancyModel))
