@@ -2,7 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
+    DATABASE_URL: str = ""
     EXTERNAL_CORE_GATEWAY: str | None = None
 
     NETWORK_MAX_DIRECT_ATTEMPTS: int = 2

@@ -17,6 +17,10 @@ def parse_hh_vacancies(html_text: str) -> list[VacancyDTO]:
 
     if template_node:
         raw_html = template_node.html
+
+        if not raw_html:
+            return []
+
         start_idx = raw_html.find("{")
         end_idx = raw_html.rfind("}") + 1
 
