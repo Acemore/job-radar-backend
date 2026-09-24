@@ -44,8 +44,8 @@ def sanitize_text(text: str) -> str:
     text = WIN_PATH_PATTERN.sub(MASK_PATH, text)
     text = LINUX_PATH_PATTERN.sub(MASK_PATH, text)
 
-    for match in phonenumbers.PhoneNumberMatcher(text, "RU"):
-        text = text.replace(match.raw_string, MASK_PHONE)  # type: ignore
+    for phone_match in phonenumbers.PhoneNumberMatcher(text, "RU"):
+        text = text.replace(phone_match.raw_string, MASK_PHONE)  # type: ignore
 
     return text
 
