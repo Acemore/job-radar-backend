@@ -24,7 +24,7 @@ class VacancyRepository:
         result = await self.session.execute(stmt)
         await self.session.flush()
 
-        return result.rowcount
+        return result.rowcount  # type: ignore[attr-defined]
 
     async def get_all(self) -> list[VacancyDTO]:
         result = await self.session.execute(select(VacancyModel))
