@@ -19,6 +19,9 @@ async def get_nodes() -> list[NetworkNodeDTO]:
     for raw_url in raw_urls:
         parsed_url = urlparse(raw_url)
 
+        if not parsed_url.hostname or not parsed_url.port:
+            continue
+
         node = NetworkNodeDTO(
             protocol=parsed_url.scheme, host=parsed_url.hostname, port=parsed_url.port
         )

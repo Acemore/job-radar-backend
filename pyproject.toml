@@ -34,6 +34,8 @@ select = ["E", "F", "I"]
 
 [tool.mypy]
 exclude = ["alembic"]
+ignore_missing_imports = true
+disable_error_code = ["import-untyped"]
 
 [dependency-groups]
 dev = [
