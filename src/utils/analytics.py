@@ -11,18 +11,29 @@ def parse_salary_to_numeric(salary_text: str) -> int | None:
     try:
         normalized_salary_text = salary_text.strip().lower()
 
-        if not normalized_salary_text or normalized_salary_text == DEFAULT_SALARY:
+        if (
+            not normalized_salary_text
+            or DEFAULT_SALARY.lower() in normalized_salary_text
+            or not any(
+                currency in normalized_salary_text for currency in ["руб", "rur", "₽"]
+            )
+        ):
             return None
+
+        normalized_salary_text = normalized_salary_text.replace(" до ", "-")
 
         sanitized_salary_text = re.sub(r"[^0-9-]", "", normalized_salary_text)
 
         if not sanitized_salary_text:
             return None
 
-        if "-" in sanitized_salary_text:
+        if "-" in sanitized_salary_text and sanitized_salary_text.find("-") > 0:
             s_from, s_to = [*map(int, sanitized_salary_text.split("-"))]
 
             return (s_from + s_to) // 2
+
+        if sanitized_salary_text.startswith("-"):
+            sanitized_salary_text = sanitized_salary_text.lstrip("-")
 
         if sanitized_salary_text.isdigit():
             return int(sanitized_salary_text)
