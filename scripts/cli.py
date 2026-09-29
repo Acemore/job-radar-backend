@@ -9,7 +9,7 @@ from src.repositories.vacancy import VacancyRepository
 from src.schedulers.habr_career import run_habr_career_job
 from src.schedulers.hh_web import run_hh_web_job
 from src.utils.analytics import calculate_salary_breakdown, parse_salary_to_numeric
-from src.utils.exports import export_vacancies_to_csv
+from src.utils.exports import export_vacancies_to_csv, export_vacancies_to_xlsx
 
 
 async def main():
@@ -40,6 +40,7 @@ async def main():
     stats = calculate_salary_breakdown(clean_salaries)
 
     await export_vacancies_to_csv(vacancies)
+    await export_vacancies_to_xlsx(vacancies)
 
     if not stats:
         print("Insufficient data to calculate salaries")
