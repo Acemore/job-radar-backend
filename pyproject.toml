@@ -37,6 +37,9 @@ select = ["E", "F", "I"]
 exclude = [".pre-commit", ".venv", "alembic"]
 ignore_missing_imports = true
 disable_error_code = ["import-untyped"]
+incremental = true
+cache_dir = ".mypy_cache"
+skip_version_check = true
 
 [dependency-groups]
 dev = [
