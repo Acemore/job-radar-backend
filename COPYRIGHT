@@ -1,0 +1,7 @@
+ACEMORE INFRASTRUCTURE COMMERCIAL POLICY & COPYRIGHT NOTICE
+
+1. Ownership: The complete source code of the JobRadar ecosystem is 100% cryptographically owned and authored by Acemore, verified by historical GPG-signed commit hashes.
+
+2. Dual-Licensing Strategy: While the public repository is available under the Open Source GNU GPLv3 terms for public evaluation, testing, and developer experiments, the copyright holder (Acemore) retains exclusive rights to execute alternative Commercial Licensing Agreements.
+
+3. Commercial Restrictions: Any integration of this codebase, its background scraping pipelines, or resilient networking layers into closed-source commercial architectures, enterprise SaaS applications, or direct resale pipelines without an explicit, separate written Commercial License from Acemore is strictly prohibited and subject to legal action under copyright law.
