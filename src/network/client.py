@@ -41,14 +41,14 @@ class ResilientNetworkClient:
         while True:
             switch_to_fallback = False
 
-            active_proxy = (
+            gateway_node = (
                 current_fallback_node_url
                 if current_fallback_node_url is not None
                 else settings.EXTERNAL_CORE_GATEWAY
             )
 
             async with httpx.AsyncClient(
-                proxy=active_proxy, follow_redirects=True
+                proxy=gateway_node, follow_redirects=True
             ) as client:
                 try:
                     response = await client.request(method, url, **kwargs)
