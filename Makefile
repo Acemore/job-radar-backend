@@ -1,4 +1,4 @@
-.PHONY: db-reset db-migrate
+.PHONY: db-reset db-migrate upgrade
 
 db-reset:
 	@echo "=== Dropping and recreating database architecture ==="
@@ -11,3 +11,8 @@ db-migrate:
 	@echo "=== Generating automated database revision script ==="
 	uv run alembic revision --autogenerate -m "auto_migration"
 	@echo "=== Revision script successfully compiled inside versions/ ==="
+
+upgrade: ## Upgrade lockfile dependencies and sync virtual environment
+	uv lock --upgrade
+	uv sync
+	uv run pre-commit run --all-files
