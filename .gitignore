@@ -6,3 +6,4 @@ context_snapshot.md
 output.txt
 docker-compose.dev.yml
 nodes.txt
+.vscode/
