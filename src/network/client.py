@@ -1,4 +1,6 @@
 import asyncio
+from types import TracebackType
+from typing import Self
 
 import httpx
 
@@ -28,6 +30,25 @@ class ResilientNetworkClient:
             else settings.NETWORK_MAX_DIRECT_ATTEMPTS
         )
 
+        self._sessions: dict[str | None, httpx.AsyncClient] = {}
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def close(self) -> None:
+        for session in self._sessions.values():
+            await session.aclose()
+
+        self._sessions.clear()
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        await self.close()
+
     async def make_request(
         self, url: str, method: str = "GET", **kwargs
     ) -> httpx.Response:
@@ -47,33 +68,38 @@ class ResilientNetworkClient:
                 else settings.EXTERNAL_CORE_GATEWAY
             )
 
-            async with httpx.AsyncClient(
-                proxy=gateway_node, follow_redirects=True
-            ) as client:
-                try:
-                    response = await client.request(method, url, **kwargs)
+            if gateway_node not in self._sessions:
+                self._sessions[gateway_node] = httpx.AsyncClient(
+                    proxy=gateway_node, follow_redirects=True
+                )
 
-                    if response.status_code not in (200, 404):
-                        response.raise_for_status()
+            client = self._sessions[gateway_node]
 
-                    return response
-                except httpx.HTTPError as e:
-                    last_error = e
+            try:
+                response = await client.request(method, url, **kwargs)
 
-                    if isinstance(
-                        e, httpx.HTTPStatusError
-                    ) and e.response.status_code in (403, 429):
-                        switch_to_fallback = True
-                    else:
-                        if current_fallback_node_url is None:
-                            direct_attempts_used += 1
-                            if direct_attempts_used >= self.max_direct_attempts:
-                                switch_to_fallback = True
-                            else:
-                                await asyncio.sleep(self.backoff_factor)
-                                continue
-                        else:
+                if response.status_code not in (200, 404):
+                    response.raise_for_status()
+
+                return response
+            except httpx.HTTPError as e:
+                last_error = e
+
+                if isinstance(e, httpx.HTTPStatusError) and e.response.status_code in (
+                    403,
+                    429,
+                ):
+                    switch_to_fallback = True
+                else:
+                    if current_fallback_node_url is None:
+                        direct_attempts_used += 1
+                        if direct_attempts_used >= self.max_direct_attempts:
                             switch_to_fallback = True
+                        else:
+                            await asyncio.sleep(self.backoff_factor)
+                            continue
+                    else:
+                        switch_to_fallback = True
 
             if switch_to_fallback:
                 if not self.node_provider:
