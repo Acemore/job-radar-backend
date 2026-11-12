@@ -34,14 +34,17 @@ async def get_nodes() -> list[NetworkNodeDTO]:
 async def main():
     nodes = await get_nodes()
     node_provider = RoundRobinNodeProvider(nodes=nodes)
-    client = ResilientNetworkClient(node_provider=node_provider, max_direct_attempts=1)
 
-    try:
-        response = await client.make_request("https://hh.ru/search/vacancy")
+    async with ResilientNetworkClient(
+        node_provider=node_provider,
+        max_direct_attempts=1,
+    ) as network_client:
+        try:
+            response = await network_client.make_request("https://hh.ru/search/vacancy")
 
-        print(f"Success! Status: {response.status_code}")
-    except FetcherNetworkError as e:
-        print(e)
+            print(f"Success! Status: {response.status_code}")
+        except FetcherNetworkError as e:
+            print(e)
 
 
 if __name__ == "__main__":

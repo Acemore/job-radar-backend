@@ -22,10 +22,9 @@ async def main():
         class_=AsyncSession,
     )
 
-    client = ResilientNetworkClient()
-
-    await run_habr_career_job(session_factory, client)
-    await run_hh_web_job(session_factory, client)
+    async with ResilientNetworkClient() as network_client:
+        await run_habr_career_job(session_factory, network_client)
+        await run_hh_web_job(session_factory, network_client)
 
     async with session_factory() as session:
         repo = VacancyRepository(session)

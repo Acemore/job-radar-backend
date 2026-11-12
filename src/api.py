@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.config import settings
 from src.database import get_session, get_sqlalchemy_dsn
 from src.logger import configure_logging
+from src.network.client import ResilientNetworkClient
 from src.network.routing import NetworkNodeDTO, RoundRobinNodeProvider
 from src.repositories.vacancy import VacancyRepository
 from src.schedulers.manager import init_scheduler
@@ -57,8 +58,9 @@ async def lifespan(app: FastAPI):
             nodes.append(node)
 
     node_provider = RoundRobinNodeProvider(nodes=nodes) if nodes else None
+    network_client = ResilientNetworkClient(node_provider=node_provider)
 
-    scheduler = init_scheduler(session_factory, node_provider=node_provider)
+    scheduler = init_scheduler(session_factory, network_client=network_client)
     if not getattr(app.state, "disable_scheduler_start", False):
         scheduler.start()
     app.state.scheduler = scheduler
@@ -67,6 +69,8 @@ async def lifespan(app: FastAPI):
 
     if scheduler.running:
         scheduler.shutdown()
+
+    await network_client.close()
 
     await engine.dispose()
 
