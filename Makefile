@@ -1,4 +1,4 @@
-.PHONY: db-reset db-migrate upgrade
+.PHONY: db-reset db-migrate upgrade typecheck clean
 
 db-reset:
 	@echo "=== Dropping and recreating database architecture ==="
@@ -16,3 +16,11 @@ upgrade: ## Upgrade lockfile dependencies and sync virtual environment
 	uv lock --upgrade
 	uv sync
 	uv run pre-commit run --all-files
+
+typecheck: ## Run static typing check via mypy daemon
+	uv run dmypy run -- --config-file pyproject.toml .
+
+clean: ## Clear python, pytest, ruff, mypy cache
+	find . -type d -name "__pycache__" -not -path "./.venv/*" -exec rm -rf {} +
+	uv run dmypy stop || true
+	rm -rf .pytest_cache .ruff_cache .mypy_cache .dmypy.json
