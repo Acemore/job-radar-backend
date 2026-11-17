@@ -7,3 +7,7 @@ output.txt
 docker-compose.dev.yml
 nodes.txt
 .vscode/
+.dmypy.json
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
