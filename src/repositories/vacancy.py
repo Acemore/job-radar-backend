@@ -1,4 +1,6 @@
-from sqlalchemy import select
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import delete, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,3 +37,14 @@ class VacancyRepository:
         ]
 
         return dto_vacancies
+
+    async def delete_older_than(self, ttl_days: int) -> int:
+        cutoff_date = datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(
+            days=ttl_days,
+        )
+
+        stmt = delete(VacancyModel).where(VacancyModel.created_at < cutoff_date)
+        result = await self.session.execute(stmt)
+        await self.session.flush()
+
+        return result.rowcount  # type: ignore[attr-defined]
