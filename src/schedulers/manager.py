@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker
 from src.network.client import ResilientNetworkClient
 from src.schedulers.habr_career import run_habr_career_job
 from src.schedulers.hh_web import run_hh_web_job
+from src.schedulers.retention import run_data_retention_job
 
 
 def init_scheduler(
@@ -33,6 +34,16 @@ def init_scheduler(
         kwargs={
             "session_factory": session_factory,
             "network_client": network_client,
+        },
+    )
+
+    scheduler.add_job(
+        run_data_retention_job,
+        "interval",
+        hours=24,
+        next_run_time=datetime.now(),
+        kwargs={
+            "session_factory": session_factory,
         },
     )
 

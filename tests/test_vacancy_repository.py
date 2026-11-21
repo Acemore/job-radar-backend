@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -164,3 +166,32 @@ async def test_get_all_empty(db_session: AsyncSession):
     vacancies = await repo.get_all()
 
     assert len(vacancies) == 0
+
+
+async def test_delete_older_than(db_session: AsyncSession):
+    fresh_vacancy = VacancyModel(
+        title="Senior Python Backend Developer",
+        company_name="TechFlow",
+        salary="250 000 - 320 000 ₽",
+        link="https://habr.com",
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+    )
+
+    old_vacancy = VacancyModel(
+        title="Legacy Python Support",
+        company_name="OldCorp",
+        salary="120 000 ₽",
+        link="https://hh.ru",
+        created_at=datetime.now(timezone.utc).replace(tzinfo=None) - timedelta(days=35),
+    )
+
+    db_session.add_all([fresh_vacancy, old_vacancy])
+    await db_session.commit()
+
+    repo = VacancyRepository(db_session)
+    deleted_count = await repo.delete_older_than(30)
+    assert deleted_count == 1
+
+    vacancies = await repo.get_all()
+    assert len(vacancies) == 1
+    assert vacancies[0].link == "https://habr.com"

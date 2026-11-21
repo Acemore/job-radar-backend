@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     NETWORK_BACKOFF_FACTOR: float = 0.5
     NETWORK_NODES_FILE: str = "nodes.txt"
 
+    VACANCY_TTL_DAYS: int = 30
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
