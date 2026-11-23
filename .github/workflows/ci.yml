@@ -30,6 +30,8 @@ jobs:
     steps:
       - name: Checkout repository code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up uv package manager
         uses: astral-sh/setup-uv@v7
@@ -49,6 +51,9 @@ jobs:
 
       - name: Audit third-party dependencies for vulnerabilities
         run: uvx pip-audit
+
+      - name: Scan repository history for leaked secrets
+        run: docker run --rm -v "${{ github.workspace }}:/repo" ghcr.io/gitleaks/gitleaks:v8.30.1 git -v /repo
 
       - name: Run test suite with isolated database
         env:
