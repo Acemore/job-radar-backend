@@ -12,5 +12,7 @@ RUN uv sync --frozen --no-cache
 
 COPY src/ ./src
 COPY scripts/ ./scripts
+COPY alembic/ ./alembic
+COPY alembic.ini ./
 
 CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
