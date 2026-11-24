@@ -2,8 +2,8 @@
 
 db-reset:
 	@echo "=== Dropping and recreating database architecture ==="
-	docker compose exec -T postgres dropdb -U postgres --if-exists job_radar
-	docker compose exec -T postgres createdb -U postgres job_radar
+	docker compose exec -T db dropdb -U postgres --if-exists job_radar
+	docker compose exec -T db createdb -U postgres job_radar
 	uv run alembic upgrade head
 	@echo "=== Database successfully sterilized and migrated ==="
 
