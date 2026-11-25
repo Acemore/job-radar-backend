@@ -53,8 +53,8 @@ class ResilientNetworkClient:
         self, url: str, method: str = "GET", **kwargs
     ) -> httpx.Response:
         direct_attempts_used = 0
+        fallback_attempts_used = 0
 
-        first_fallback_node_url: str | None = None
         current_fallback_node_url: str | None = None
 
         last_error: Exception | None = None
@@ -109,19 +109,19 @@ class ResilientNetworkClient:
                         original_exception=last_error,
                     )
 
+                nodes_count = self.node_provider.get_nodes_count()
+
+                if nodes_count == 0 or fallback_attempts_used == nodes_count:
+                    raise FetcherNetworkError(
+                        f"All network routing paths exhausted. "
+                        f"Last error: {last_error}",
+                        original_exception=last_error,
+                    )
+
+                fallback_attempts_used += 1
+
                 next_node = await self.node_provider.get_node()
                 next_node_url = next_node.to_endpoint_url()
+                current_fallback_node_url = next_node_url
 
-                if current_fallback_node_url is None:
-                    first_fallback_node_url = next_node_url
-                    current_fallback_node_url = next_node_url
-                else:
-                    if next_node_url == first_fallback_node_url:
-                        raise FetcherNetworkError(
-                            f"All network routing paths exhausted. "
-                            f"Last error: {last_error}",
-                            original_exception=last_error,
-                        )
-
-                    current_fallback_node_url = next_node_url
-                    continue
+                continue

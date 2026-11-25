@@ -18,7 +18,14 @@ def test_endpoint_url_build(node_anonymous, node_authenticated):
 async def test_round_robin_balancing(nodes_list):
     balancer = RoundRobinNodeProvider(nodes_list)
 
+    assert balancer.get_nodes_count() == len(nodes_list)
+
     assert await balancer.get_node() == nodes_list[0]
     assert await balancer.get_node() == nodes_list[1]
     assert await balancer.get_node() == nodes_list[0]
     assert await balancer.get_node() == nodes_list[1]
+
+
+def test_empty_nodes_pool_error_raising():
+    with pytest.raises(ValueError, match="Node list cannot be empty"):
+        RoundRobinNodeProvider([])
