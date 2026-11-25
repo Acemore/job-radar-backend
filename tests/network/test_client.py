@@ -49,6 +49,7 @@ async def test_switch_to_fallback_on_waf_block():
             host="test.node",
             port=8000,
         )
+        mock_provider.get_nodes_count.return_value = 1
 
         async with ResilientNetworkClient(node_provider=mock_provider) as client:
             response = await client.make_request("https://example.com")
@@ -80,6 +81,7 @@ async def test_fallback_after_direct_timeout():
             host="test.node",
             port=8000,
         )
+        mock_provider.get_nodes_count.return_value = 1
 
         async with ResilientNetworkClient(
             node_provider=mock_provider, max_direct_attempts=2, backoff_factor=0.0
@@ -129,7 +131,8 @@ async def test_all_routing_paths_exhausted():
 
         mock_provider = MagicMock(spec=BaseNodeProvider)
         mock_provider.get_node = AsyncMock()
-        mock_provider.get_node.side_effect = [node, node]
+        mock_provider.get_node.return_value = node
+        mock_provider.get_nodes_count.return_value = 1
 
         async with ResilientNetworkClient(node_provider=mock_provider) as client:
             with pytest.raises(FetcherNetworkError) as exc_info:
@@ -138,7 +141,7 @@ async def test_all_routing_paths_exhausted():
             assert "All network routing paths exhausted" in str(exc_info.value)
 
         assert mock_request.call_count == 2
-        assert mock_provider.get_node.call_count == 2
+        assert mock_provider.get_node.call_count == 1
 
 
 @pytest.mark.asyncio
@@ -180,6 +183,7 @@ async def test_context_manager_closes_all_sessions():
         host="test.node",
         port=8000,
     )
+    mock_provider.get_nodes_count.return_value = 1
 
     with patch("src.network.client.httpx.AsyncClient") as mock_async_client_cls:
         mock_async_client_cls.side_effect = [mock_direct_session, mock_fallback_session]
@@ -193,3 +197,64 @@ async def test_context_manager_closes_all_sessions():
         mock_direct_session.aclose.assert_awaited_once()
         mock_fallback_session.aclose.assert_awaited_once()
         assert len(client._sessions) == 0
+
+
+@pytest.mark.asyncio
+async def test_consecutive_duplicate_nodes_all_attempted():
+    fake_request = httpx.Request("GET", "https://example.com")
+
+    mock_403 = httpx.Response(status_code=403, request=fake_request)
+    mock_200 = httpx.Response(status_code=200, request=fake_request)
+
+    with patch.object(
+        httpx.AsyncClient, "request", new_callable=AsyncMock
+    ) as mock_request:
+        mock_request.side_effect = [mock_403, mock_403, mock_403, mock_200]
+
+        node_1 = NetworkNodeDTO(
+            protocol="http",
+            host="test.node1",
+            port=8000,
+        )
+        node_2 = NetworkNodeDTO(
+            protocol="http",
+            host="test.node2",
+            port=8000,
+        )
+
+        mock_provider = MagicMock(spec=BaseNodeProvider)
+        mock_provider.get_node = AsyncMock()
+        mock_provider.get_node.side_effect = [node_1, node_1, node_2]
+        mock_provider.get_nodes_count.return_value = 3
+
+        async with ResilientNetworkClient(node_provider=mock_provider) as client:
+            response = await client.make_request("https://example.com")
+
+            assert response.status_code == 200
+
+        assert mock_request.call_count == 4
+        assert mock_provider.get_node.call_count == 3
+
+
+@pytest.mark.asyncio
+async def test_empty_node_pool_raises_fetcher_error():
+    fake_request = httpx.Request("GET", "https://example.com")
+    mock_403 = httpx.Response(status_code=403, request=fake_request)
+
+    with patch.object(
+        httpx.AsyncClient, "request", new_callable=AsyncMock
+    ) as mock_request:
+        mock_request.return_value = mock_403
+
+        mock_provider = MagicMock(spec=BaseNodeProvider)
+        mock_provider.get_node = AsyncMock()
+        mock_provider.get_nodes_count.return_value = 0
+
+        async with ResilientNetworkClient(node_provider=mock_provider) as client:
+            with pytest.raises(FetcherNetworkError) as exc_info:
+                await client.make_request("https://example.com")
+
+            assert "All network routing paths exhausted" in str(exc_info.value)
+
+        assert mock_request.call_count == 1
+        assert mock_provider.get_node.call_count == 0

@@ -25,10 +25,22 @@ class BaseNodeProvider(ABC):
     async def get_node(self) -> NetworkNodeDTO:
         pass
 
+    @abstractmethod
+    def get_nodes_count(self) -> int:
+        pass
+
 
 class RoundRobinNodeProvider(BaseNodeProvider):
     def __init__(self, nodes: Iterable[NetworkNodeDTO]):
-        self.nodes = itertools.cycle(nodes)
+        self._nodes = list(nodes)
+
+        if not self._nodes:
+            raise ValueError("Node list cannot be empty")
+
+        self.nodes = itertools.cycle(self._nodes)
 
     async def get_node(self) -> NetworkNodeDTO:
         return next(self.nodes)
+
+    def get_nodes_count(self) -> int:
+        return len(self._nodes)
