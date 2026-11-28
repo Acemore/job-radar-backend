@@ -5,6 +5,7 @@ WORKDIR /app
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 ENV UV_PROJECT_ENVIRONMENT=/venv
+ENV PATH="/venv/bin:${PATH}"
 
 COPY pyproject.toml uv.lock ./
 
@@ -15,4 +16,4 @@ COPY scripts/ ./scripts
 COPY alembic/ ./alembic
 COPY alembic.ini ./
 
-CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "alembic upgrade head && exec uvicorn src.api:app --host 0.0.0.0 --port ${PORT:-8000}"]
